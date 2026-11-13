@@ -1,6 +1,6 @@
 # MZ 导航系统 v1.0.4
 
-把你原来的静态导航站（hao.example.com）改造成带后台管理的 PHP 程序。**前台视觉与原静态站完全一致**，后台可管理分类、站点、搜索引擎、壁纸、公告、友链，并支持数据备份导出。
+把原来的静态导航站（hao.example.com）改造成带后台管理的 PHP 程序。**前台视觉与原静态站完全一致**，后台可管理分类、站点、搜索引擎、壁纸、公告、友链，并支持数据备份导出。
 
 ---
 
@@ -56,9 +56,7 @@ uploads/wallpaper/ 可写
 不删的话别人可以重新安装并清空你的数据。
 
 ### 6. 部署自检
-访问 `http://你的域名/check.php?key=XXXXXXXX`
-
-`key` = `data/config.php` 里 `authkey` 的**前 8 位**。检查完请删除 `check.php`。
+访问 `http://你的域名/check.php?key=XXXXXXXX`，其中 `key` 是 `data/config.php` 里 `authkey` 的**前 8 位**。检查完请删除 `check.php`。
 
 ### 7. 登录后台
 `http://你的域名/admin/`
@@ -189,13 +187,16 @@ https://search.bilibili.com/all?keyword={q}
 ### 数据备份
 导出 SQL（标准 MySQL 建表+插入语句，可直接导入 phpMyAdmin 恢复）或 JSON；也可清理过期点击明细、清空统计。
 
+### 账号安全
+修改密码、退出登录。页面只显示**当前账号**的登录次数与上次登录 IP 两个字段（不是完整的登录历史列表）。
+
 ---
 
 ## 五、前台说明
 
 - **视觉与原静态站 100% 一致**：原 `style.css` 未做任何改动，新增样式单独放在 `assets/css/mz.css`
 - **搜索**：提交后由 PHP 302 跳转到对应搜索引擎，关键词自动 URL 编码
-- **引擎选择条**：搜索框下方一排引擎按钮，点选即切换（不刷新页面），选中态用引擎色高亮；无 JS 时退化为 `?t=` 跳转。见下方「引擎选择条」
+- **引擎选择条**：搜索框下方一排引擎按钮，点选即切换（不刷新页面），选中态用引擎色高亮；无 JS 时退化为 `?t=` 跳转
 - **跳转保护**：站点链接显示为 `/api/jump.php?id=xx`，不暴露真实地址；可设「过渡页」或「直接 302」
 - **点击统计**：中间页记录点击，仪表盘显示近 7 日趋势与热门 TOP10
 - **所有静态资源已本地化**，不再依赖 `libs.example.com`，换域名/换服务器都能直接跑
@@ -210,7 +211,7 @@ https://search.bilibili.com/all?keyword={q}
 
 ```
 后台 → 站点设置 → 背景模式 → 选「随机图片接口」
-点预设里的「+ MaZzz 随机二次元」（就是 http://api.example.com/API/img.php）→ 保存
+点预设里的「+ 示例 随机二次元」→ 保存
 ```
 
 这个接口实测有两处脾气，所以**建议把「由服务器代理拉取图片」也打开**：① 它自己 302 到第三方图床（花瓣 / 米哈游 / 堆糖…），其中花瓣约 1/3 概率返回错误页；② 有时给出好几 MB 的原图。开了代理模式后，这两条都由服务器兜住（失败自动换地址重试、超大图丢弃），访客端只会看到本站 `api/bg.php` 一个地址，也不会遇到浏览器代理/混合内容的问题。
@@ -230,6 +231,22 @@ https://search.bilibili.com/all?keyword={q}
 
 改完**重启 PHP**（宝塔：软件商店 → PHP → 设置 → 服务 → 重启）再试。也注意 `extension_dir` 必须指向 PHP 自带的 `ext` 目录（有的 Windows 包默认写成相对路径 `ext`，会加载不到）。
 
+**Q：安装时提示 `SQLSTATE[23000] ... 1062 Duplicate entry '1' for key 'PRIMARY'`？**
+
+这是**库里还留着上一次安装的数据**，而安装脚本给分类显式指定了 `id`（1、2、3…），再次插入时撞上主键。`CREATE TABLE IF NOT EXISTS` 不会清空已存在的表，所以「删了 `data/install.lock` 重装」必踩。
+
+三种解法：
+
+1. **清空旧表再装**（最干净，**会丢数据**）——先确认前缀，再执行：
+   ```sql
+   DROP TABLE IF EXISTS 前缀_category, 前缀_site, 前缀_search, 前缀_wallpaper,
+     前缀_notice, 前缀_link, 前缀_admin, 前缀_hit, 前缀_setting;
+   ```
+2. **换一个空库名重装**（不动现有数据）——适合线上已有数据、想另起一套的情况。
+3. **改代码让它幂等**——把 `install/index.php` 里的分类插入改成 `INSERT ... ON DUPLICATE KEY UPDATE`，或在导入前先 `TRUNCATE` 相关表。
+
+> ⚠️ 如果这台机器上已经有真实数据，**不要执行方案 1 的 DROP**。先导出备份，或改用方案 2。
+
 **Q：输入特别长的网址或名称，保存后会怎样？**
 
 不会报错，会**按字段上限自动截断**并记进 `data/log/`。各字段上限（数据库列宽）：
@@ -244,12 +261,14 @@ https://search.bilibili.com/all?keyword={q}
 
 **Q：某个页面突然变成「服务器处理请求时出错」？**
 
-这是程序的兜底错误页——说明有异常被捕获了，**详情写在 `data/log/年月.log` 里**。把这行日志发我即可定位。若 `data/config.php` 里加了 `'debug' => true`，页面上会直接显示异常内容。
+这是程序的兜底错误页——说明有异常被捕获了，**详情写在 `data/log/年月.log` 里**。若 `data/config.php` 里加了 `'debug' => true`，页面上会直接显示异常内容。
 
 **Q：上传大图片提示失败？**
+
 改 `php.ini`：`upload_max_filesize = 10M`、`post_max_size = 12M`，重启 PHP。
 
 **Q：后台进不去 / 一直跳登录页？**
+
 1. 检查 `data/` 目录是否可写；
 2. 检查浏览器是否禁用了 Cookie；
 3. 删除 `data/login_fail.json` 解除登录锁定。
@@ -262,7 +281,7 @@ https://search.bilibili.com/all?keyword={q}
 ```
 浏览器访问它，复制输出的哈希串，然后执行 SQL：
 ```sql
-UPDATE mz_admin SET password='粘贴哈希' WHERE username='admin';
+UPDATE 前缀_admin SET password='粘贴哈希' WHERE username='admin';
 ```
 改完**立刻删掉** `genhash.php`。
 
@@ -312,7 +331,7 @@ location ~ /\. {
 
 ---
 
-## 九、技术支持备注
+## 九、技术说明
 
 - 数据库表前缀默认 `mz_`，安装时可自定义
 - 密码使用 `password_hash()`（bcrypt）存储，非明文
@@ -320,4 +339,21 @@ location ~ /\. {
 - 上传目录禁止执行 PHP，`data/` 目录禁止外部访问
 - **字符列上限自动从建表语句解析**（`MzDb::limits()`），写入前按列宽截断，避免 MySQL 严格模式抛异常、也避免两种数据库行为不一致
 - **全局异常/致命错误兜底**：未捕获的错误会给出可读页面（API 路径返回 JSON），详情写入 `data/log/`，不会白屏
-- 时间字段统一用 `int` 时间戳存储，不受 MySQL `NO_ZERO_DATE` 等模式影响；代码中无 `GROUP BY`，兼容 MySQL 8 的 `ONLY_FULL_GROUP_BY`
+- 时间字段统一用 `int` 时间戳存储，不受 `MySQL NO_ZERO_DATE` 等模式影响；代码中无 `GROUP BY`，兼容 MySQL 8 的 `ONLY_FULL_GROUP_BY`
+
+---
+
+## 十、版本记录
+
+| 版本 | 日期 | 主要变化 |
+|---|---|---|
+| **v1.0.4** | 2026-10-02 | 后台「随机图片接口」配置助手：10 条实测预设 + 一键填入 + 三种测活（浏览器直连 / 拉取清单 / 服务端逐条实测），失败文案中文化 |
+| v1.0.3 | 2026-09-30 | 背景接口增加「失败重试」与「单张大小上限」；修复线上 60% 刷新不换图的问题 |
+| v1.0.2 | 2026-09-30 | 背景改为经 `api/bg.php` 中转，真正实现每次刷新随机换图 |
+| v1.0.1 | 2026-09-30 | 搜索框下方增加引擎选择条 |
+
+---
+
+## 十一、开源协议
+
+MIT License，详见 [LICENSE](LICENSE)。
