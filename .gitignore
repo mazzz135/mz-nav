@@ -1,0 +1,53 @@
+# ============================================================
+#  mz-nav 仓库忽略规则
+#  原则：只发布「程序本体 + 文档」，一切本地工具/凭据/快照/产物都不进仓库
+# ============================================================
+
+# ---- 运行时配置与产物 ----
+data/config.php
+data/install.lock
+data/*.log
+data/backup/
+uploads/*
+!uploads/.htaccess
+backup/
+
+# ---- 本地工作区（含线上 IP / 面板入口 / Cookie / 内存笔记）----
+.workbuddy/
+.claude/
+.vscode/
+.idea/
+
+# ---- 本地工具与测试脚本（含写死的线上地址、会话凭据）----
+_source/
+_bt_files.py
+_dist/
+_shots/
+
+# ---- 分发包 ----
+mz-nav-v*.zip
+
+# ---- 通用忽略 ----
+__pycache__/
+*.pyc
+*.pyo
+*.log
+*.sql
+*.sql.gz
+*.zip
+*.tar.gz
+.env
+.env.*
+!.env.example
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+node_modules/
+
+# ---- 临时 / 一次性 ----
+*.bak
+*.old
+*.orig
+*.tmp
