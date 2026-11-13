@@ -1,0 +1,296 @@
+/* ==========================================================================
+   MZ 导航系统 — 前台补充样式（原站 style.css 保持不变，新增部分在此文件）
+   ========================================================================== */
+
+/* 图标：支持自定义图片图标 */
+.list ul li a img {
+    width: 14px;
+    height: 14px;
+    margin: 0 5px 0 8px;
+    vertical-align: -0.15em;
+    object-fit: contain;
+    border-radius: 2px;
+}
+
+.list ul li.title img {
+    width: 20px;
+    height: 20px;
+    margin: 0 5px 0 8px;
+    vertical-align: -0.2em;
+}
+
+/* 背景遮罩（提升文字可读性，后台可开关） */
+body.mz-mask::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 14, 28, .38);
+    z-index: 1;
+    pointer-events: none;
+}
+
+body.mz-mask #content {
+    position: relative;
+    z-index: 2;
+}
+
+/* 公告 / 广告条 */
+.mz-notice {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 3000;
+    background: rgba(36, 147, 253, .94);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.55;
+    padding: 9px 46px 9px 18px;
+    text-align: left;
+    box-shadow: 0 2px 12px rgba(0, 20, 50, .22);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.mz-notice.mz-notice-top { top: 0; }
+.mz-notice.mz-notice-bottom { bottom: 0; }
+
+.mz-notice a { color: #fff; }
+.mz-notice a:hover { text-decoration: underline; }
+
+.mz-notice .mz-notice-item { margin-right: 22px; white-space: nowrap; }
+
+.mz-notice .mz-notice-close {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    opacity: .75;
+    background: none;
+    border: none;
+    color: #fff;
+    padding: 2px 4px;
+}
+
+.mz-notice .mz-notice-close:hover { opacity: 1; }
+
+/* 友情链接 */
+.mz-links {
+    position: absolute;
+    bottom: 36px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255, 255, 255, .82);
+    z-index: 20;
+    padding: 0 20px;
+    line-height: 1.9;
+}
+
+.mz-links span { opacity: .75; }
+.mz-links a {
+    color: rgba(255, 255, 255, .82);
+    margin: 0 7px;
+    text-decoration: none;
+}
+.mz-links a:hover { color: #fff; text-decoration: underline; }
+
+/* 搜索框左侧引擎图标里的文字兜底 */
+.con .sou form .lg.mz-lg-text {
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    line-height: 30px;
+    color: #fff;
+    letter-spacing: 0;
+}
+
+/* ==========================================================================
+   搜索引擎选择条（搜索框下方）
+   —— 后台「搜索框 → 显示搜索引擎选择条」开关控制，单引擎时不渲染
+   颜色变量 --mz-c 由 PHP 按引擎色注入
+   ========================================================================== */
+.con .sou .mz-engine-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    /* 抵消 form 的 30px 下边距，视觉间距约 18px */
+    margin: -12px auto 0;
+    padding: 0 2px;
+    position: relative;
+    z-index: 40;
+    /* 引擎多时允许比搜索框更宽（仍以搜索框为中心），避免堆成三四行 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(900px, calc(100vw - 36px));
+    box-sizing: border-box;
+}
+
+.con .sou .mz-engine-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 13px 0 8px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .88);
+    color: #333;
+    font-size: 13px;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    box-shadow: 0 1px 6px rgba(0, 20, 50, .14);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background .18s, color .18s, transform .18s, box-shadow .18s;
+}
+
+.con .sou .mz-engine-chip:hover {
+    background: #fff;
+    color: #111;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 20, 50, .24);
+}
+
+/* 当前引擎：整块填充引擎色 */
+.con .sou .mz-engine-chip.on {
+    background: var(--mz-c, #2493fd);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(0, 20, 50, .3);
+}
+
+.con .sou .mz-engine-chip-ico {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: 0 0 auto;
+}
+
+.con .sou .mz-engine-chip-txt {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--mz-c, #2493fd);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 18px;
+    text-align: center;
+}
+
+/* 选中态下首字徽标改为半透明白，避免同色叠同色 */
+.con .sou .mz-engine-chip.on .mz-engine-chip-txt {
+    background: rgba(255, 255, 255, .26);
+}
+
+/* 天气 */
+.mz-wea {
+    position: absolute;
+    left: 20px;
+    top: 15px;
+    font-size: 12px;
+    color: #fff;
+    z-index: 100000;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .35);
+    cursor: default;
+    line-height: 22px;
+}
+
+.mz-wea img { height: 15px; vertical-align: -3px; margin: 0 1px; }
+.mz-wea a { color: #fff; }
+
+@media (max-width: 640px) {
+    .mz-wea { left: 10px; color: #777; text-shadow: none; }
+    .mz-links { bottom: 32px; font-size: 11px; }
+    body.mz-mask .mz-wea { color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .35); }
+
+    /* 手机屏窄：引擎多时改为横向滑动，避免换行堆成一大片 */
+    .con .sou .mz-engine-bar {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: 6px;
+        margin-top: -10px;
+        padding: 2px 2px 8px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        /* 回落到搜索框宽度，不再横向溢出 */
+        left: auto;
+        transform: none;
+        width: auto;
+    }
+
+    .con .sou .mz-engine-bar::-webkit-scrollbar { display: none; }
+
+    .con .sou .mz-engine-chip {
+        flex: 0 0 auto;
+        height: 30px;
+        padding: 0 11px 0 7px;
+        font-size: 12px;
+    }
+}
+
+/* 矮屏（横屏手机）：原站 style.css 会把搜索框切成深色，选择条同步 */
+@media (max-height: 420px) {
+    .con .sou .mz-engine-chip {
+        background: rgba(41, 53, 80, .92);
+        color: #bbb;
+        box-shadow: none;
+    }
+
+    .con .sou .mz-engine-chip:hover { background: #293550; color: #fff; }
+
+    .con .sou .mz-engine-chip.on { background: var(--mz-c, #2493fd); color: #fff; }
+}
+
+/* 前台提示条（例如：站点未配置可用搜索引擎时告知访客原因）
+   独立于公告条，用顶部居中的浮层，避免与公告位置打架 */
+.mz-flash {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4000;
+    max-width: min(92vw, 560px);
+    padding: 10px 42px 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #fff;
+    box-shadow: 0 6px 24px rgba(0, 20, 50, .3);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-sizing: border-box;
+}
+
+.mz-flash-ok { background: rgba(36, 147, 253, .95); }
+.mz-flash-err { background: rgba(220, 56, 56, .95); }
+
+.mz-flash .mz-flash-close {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    opacity: .78;
+    background: none;
+    border: none;
+    color: #fff;
+    padding: 2px 4px;
+}
+
+.mz-flash .mz-flash-close:hover { opacity: 1; }
+
+/* 深色模式下公告与页面底色调和 */
+@media (prefers-color-scheme: dark) {
+    body { background-color: #162035; }
+}
