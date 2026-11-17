@@ -78,13 +78,11 @@ a {
     bottom: 0;
 }
 
-.con .shlogo {
-    position: relative;
-    width: 480px;
-    height: 120px;
-    margin: 20px auto;
-    background: url(icon/logo.svg) no-repeat center/cover;
-}
+    .con .shlogo {
+        width: var(--logo-w, 480px);
+        height: var(--logo-h, 120px);
+        margin: 20px auto;
+    }
 
 .con .shlogo a {
     width: 100%;
@@ -365,19 +363,40 @@ svg.icon {
     overflow: hidden;
 }
 
-.list ul li.title svg.icon {
+img.icon-img {
+    width: 14px;
+    height: 14px;
+    margin: 0 5px 0 8px;
+    vertical-align: -0.15em;
+    border-radius: 3px;
+    object-fit: contain;
+    background: transparent;
+}
+
+.list ul li.title svg.icon,
+.list ul li.title img.icon-img {
     width: 20px;
     height: 20px;
 }
 
 @media (max-width: 640px) {
     .con {
-        top: 0px;
+        top: 0;
+        /* 移动端：取消绝对定位，改为纵向居中布局 */
+        position: static;
+        height: auto;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 60px 10px 40px;
+        box-sizing: border-box;
     }
 
     .con .shlogo {
-        width: 320px;
-        height: 100px;
+        width: 280px !important;
+        height: 80px !important;
+        margin: 0 auto 24px !important;
     }
 
     .con .sou form .wd:focus {
@@ -391,22 +410,37 @@ svg.icon {
     }
     .con .sou #word{max-height: 150px;}
 
-    #menu.on {
-        right: 270px;
+    /* 引擎条横向滚动，不撑开页面 */
+    .con .sou .mz-engine-bar {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 4px;
+        gap: 8px;
     }
+    .con .sou .mz-engine-bar::-webkit-scrollbar { display: none; }
 
+    /* 引擎芯片样式统一在 mz.css 里定义，此处不重复 */
+
+    /* 移动端：侧栏默认滑出屏外，点击顶部按钮展开 */
     .list {
-        width: 227px;
+        display: block;
+        right: -380px;
+        transition: right 0.3s ease;
+    }
+    #menu.on ~ .list {
+        right: 0;
     }
 
-    .list ul {
-        width: 220px;
-    }
-
-    .con .sou ul li {
-        width: 100px;
-        font-size: 12px;
-        text-indent: 30px;
+    /* 站点列表项触控高度 */
+    .list ul li a,
+    .list ul li .item {
+        min-height: 44px;
+        line-height: 44px;
+        padding: 0 12px;
+        font-size: 15px;
     }
 
     .home,

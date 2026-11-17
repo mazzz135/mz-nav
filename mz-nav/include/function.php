@@ -475,9 +475,9 @@ function mz_bg_api_list()
 function mz_bg_api_presets()
 {
     return [
-        ['name' => '示例 随机二次元',  'url' => 'http://api.example.com/API/img.php',
-         'tag' => '示例', 'https' => false,
-         'note' => '示例接口，请替换为你自己的图床地址。偶发跳转失败，靠「失败重试」兜住'],
+        ['name' => 'MaZzz 随机二次元', 'url' => 'https://api.mazzz.cc/api/v1/demo/random-image',
+         'tag' => 'JSON', 'https' => true,
+         'note' => '返回 JSON（data.result.url），程序自动解出图片直链；需开启「由服务器代理拉取图片」'],
         ['name' => '鹿图 动漫',        'url' => 'http://api.btstu.cn/sjbz/api.php?lx=dongman&format=images',
          'tag' => '二次元', 'https' => false,
          'note' => '必须用 http：它的 https 会被直接重置连接'],
@@ -570,7 +570,7 @@ function mz_curl_err_text($no)
  * @param array|null $meta     传出参数：诊断信息（HTTP 码 / 类型 / 实际地址 / 字节 / 是否超限 / 错误）
  * @return array|null ['body'=>string,'mime'=>string]；失败返回 null
  */
-function mz_bg_fetch($url, $timeout = 8, $maxBytes = 0, &$meta = null)
+function mz_bg_fetch($url, $timeout = 8, $maxBytes = 0, &$meta = null, $depth = 0)
 {
     $meta = [
         'code' => 0, 'ct' => '', 'final' => $url, 'bytes' => 0,
@@ -599,7 +599,7 @@ function mz_bg_fetch($url, $timeout = 8, $maxBytes = 0, &$meta = null)
             CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; MZNav/' . MZ_VERSION . ')',
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => 0,
-            CURLOPT_HTTPHEADER     => ['Accept: image/*,*/*;q=0.8'],
+            CURLOPT_HTTPHEADER     => ['Accept: image/*,application/json,*/*;q=0.8'],
             CURLOPT_PROTOCOLS      => CURLPROTO_HTTP | CURLPROTO_HTTPS,
             // 流式累积：一旦超过上限立刻中断，不必把整张大图拉完再扔掉
             CURLOPT_WRITEFUNCTION  => function ($ch, $chunk) use (&$buf, $limit, &$over) {
@@ -643,7 +643,7 @@ function mz_bg_fetch($url, $timeout = 8, $maxBytes = 0, &$meta = null)
                 'follow_location' => 1,
                 'max_redirects'   => 3,
                 'header'          => "User-Agent: Mozilla/5.0 (compatible; MZNav/" . MZ_VERSION . ")\r\n"
-                                   . "Accept: image/*,*/*;q=0.8\r\n",
+                                   . "Accept: image/*,application/json,*/*;q=0.8\r\n",
             ],
             'ssl' => ['verify_peer' => false, 'verify_peer_name' => false],
         ]);
@@ -677,6 +677,27 @@ function mz_bg_fetch($url, $timeout = 8, $maxBytes = 0, &$meta = null)
 
     $meta['bytes'] = strlen($img);
     $mime = strtolower(trim(explode(';', $mime)[0]));
+    
+    // 某些接口返回 JSON（含图片直链），需要解出图片地址再抓一次
+    $looksJson = ($mime === 'application/json' || $mime === 'text/json')
+               || (isset($img[0]) && ($img[0] === '{' || $img[0] === '['));
+    if ($looksJson && $depth < 3) {   // 最多递归 3 层，防死循环
+        $imgUrl = mz_bg_json_pick_url($img);
+        if ($imgUrl !== '') {
+            $meta2 = null;
+            $r2 = mz_bg_fetch($imgUrl, $timeout, $maxBytes, $meta2, $depth + 1);
+            if ($r2 !== null) {
+                // 保留原始 meta 的关键信息，但 final 指向图片
+                $meta['final'] = $imgUrl;
+                $meta['json'] = true;
+                return $r2;
+            }
+        }
+        // 无法从 JSON 解出图片 → 失败
+        $meta['err'] = '接口返回 JSON，但没找到图片地址';
+        return null;
+    }
+    
     if (strpos($mime, 'image/') !== 0) {
         // 有些接口 Content-Type 给得不对，用图片头兜底判一次
         $info = @getimagesizefromstring($img);
@@ -689,6 +710,80 @@ function mz_bg_fetch($url, $timeout = 8, $maxBytes = 0, &$meta = null)
 
     $meta['ct'] = $mime;
     return ['body' => $img, 'mime' => $mime];
+}
+
+/**
+ * 从接口返回的 JSON 里找出图片直链。
+ *
+ * 兼容多种常见结构（按优先级）：
+ *   {"data":{"result":{"url":"https://..."}}}   ← MZ API
+ *   {"data":{"url":"https://..."}}
+ *   {"url":"https://..."}
+ *   {"data":"https://..."}
+ *   {"img":"https://..."} / {"image":"..."} / {"src":"..."}
+ *   {"data":["https://...", ...]}                ← 取第一条
+ *
+ * @param string $json 原始 JSON 文本
+ * @return string 图片 URL；找不到返回空串
+ */
+function mz_bg_json_pick_url($json)
+{
+    $j = json_decode((string)$json, true);
+    if (!is_array($j)) {
+        return '';
+    }
+
+    // 优先按已知路径取
+    $paths = [
+        ['data', 'result', 'url'],
+        ['data', 'url'],
+        ['data', 'image'],
+        ['data', 'src'],
+        ['result', 'url'],
+        ['url'],
+        ['img'],
+        ['image'],
+        ['src'],
+        ['pic'],
+        ['data'],
+    ];
+    foreach ($paths as $p) {
+        $cur = $j;
+        foreach ($p as $k) {
+            if (!is_array($cur) || !isset($cur[$k])) {
+                $cur = null;
+                break;
+            }
+            $cur = $cur[$k];
+        }
+        if (is_string($cur) && preg_match('~^https?://~i', $cur)) {
+            return $cur;
+        }
+    }
+
+    // 兜底：递归找第一个 http(s) 字符串
+    $found = '';
+    $walk = function ($node, $depth) use (&$walk, &$found) {
+        if ($found !== '' || $depth > 4) {
+            return;
+        }
+        if (is_string($node)) {
+            if (preg_match('~^https?://\S+~i', $node)) {
+                $found = $node;
+            }
+            return;
+        }
+        if (is_array($node)) {
+            foreach ($node as $v) {
+                $walk($v, $depth + 1);
+                if ($found !== '') {
+                    return;
+                }
+            }
+        }
+    };
+    $walk($j, 0);
+    return $found;
 }
 
 /**

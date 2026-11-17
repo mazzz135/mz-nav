@@ -232,9 +232,17 @@ body.mz-mask #content {
 
     .con .sou .mz-engine-chip {
         flex: 0 0 auto;
-        height: 30px;
-        padding: 0 11px 0 7px;
-        font-size: 12px;
+        min-height: 40px;
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+
+    /* 引擎首字徽标增大到 14px */
+    .con .sou .mz-engine-chip-txt {
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        font-size: 14px;
     }
 }
 

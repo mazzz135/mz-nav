@@ -193,7 +193,7 @@
                 if (listBox) { listBox.hidden = true; listBox.innerHTML = ''; }
                 var fd = new FormData();
                 fd.append('_token', token);
-                fetch('setting.php?ajax=bgapi_list', { method: 'POST', body: fd, credentials: 'same-origin' })
+                fetch('wallpaper.php?ajax=bgapi_list', { method: 'POST', body: fd, credentials: 'same-origin' })
                     .then(function (r) {
                         if (r.status === 419) throw new Error('页面已过期，请刷新后重试');
                         return r.json();

@@ -3,7 +3,7 @@
  * MZ 导航系统 — 引导文件
  * 所有入口（前台 / 后台 / api / install）统一 require 本文件
  */
-define('MZ_VERSION', '1.0.4');
+define('MZ_VERSION', '1.0.5');
 define('MZ_ROOT', dirname(__DIR__));
 define('MZ_INC', __DIR__);
 define('MZ_DATA', MZ_ROOT . DIRECTORY_SEPARATOR . 'data');

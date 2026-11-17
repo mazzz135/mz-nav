@@ -24,6 +24,14 @@ _bt_files.py
 _dist/
 _shots/
 
+# ---- 工作区里的其它项目 / 临时目录（下划线开头 = 本地临时，不进仓库）----
+_*/
+_*.php
+_*.png
+API/
+api-hub/
+*.cache
+
 # ---- 分发包 ----
 mz-nav-v*.zip
 

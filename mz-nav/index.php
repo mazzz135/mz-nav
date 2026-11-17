@@ -153,6 +153,38 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
   <meta name="x5-page-mode" content="app"><!--QQ应用模式-->
   <title><?= mz_h($siteTitle) ?></title>
 
+  <!-- SEO: canonical -->
+  <link rel="canonical" href="<?= mz_url('/') ?>">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="<?= mz_url('/') ?>">
+  <meta property="og:title" content="<?= mz_attr($siteTitle) ?>">
+  <meta property="og:description" content="<?= mz_attr(mz_setting('site_description')) ?>">
+  <meta property="og:image" content="<?= mz_attr(mz_media($logo)) ?>">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="<?= mz_url('/') ?>">
+  <meta property="twitter:title" content="<?= mz_attr($siteTitle) ?>">
+  <meta property="twitter:description" content="<?= mz_attr(mz_setting('site_description')) ?>">
+  <meta property="twitter:image" content="<?= mz_attr(mz_media($logo)) ?>">
+
+  <!-- JSON-LD: WebSite -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": <?= json_encode(mz_setting('site_name', 'MZ 简易搜索')) ?>,
+    "url": <?= json_encode(mz_url('/')) ?>,
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": <?= json_encode(mz_url('?q={search_term_string}')) ?>,
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
   <link href="<?= mz_attr(mz_url('assets/css/style.css')) ?>?v=<?= MZ_VERSION ?>" rel="stylesheet">
   <link href="<?= mz_attr(mz_url('assets/css/mz.css')) ?>?v=<?= MZ_VERSION ?>" rel="stylesheet">
 
@@ -218,7 +250,7 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
 
     <div id="content">
         <div class="con">
-            <div class="shlogo" style="background: url(<?= mz_css_url(mz_media($logo)) ?>) no-repeat center/cover; width: <?= $logoW ?>px; height: <?= $logoH ?>px;"></div>
+            <div class="shlogo" style="background: url(<?= mz_css_url(mz_media($logo)) ?>) no-repeat center/cover; --logo-w: <?= (int)$logoW ?>px; --logo-h: <?= (int)$logoH ?>px;"></div>
             <div class="sou">
                 <form action="<?= mz_attr(mz_url()) ?>" method="post" target="_self">
                     <input type="hidden" name="t" id="mzEngineField" value="<?= mz_attr($engine ? $engine['keyword'] : '') ?>">

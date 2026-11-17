@@ -1,0 +1,11 @@
+# MZ 导航系统
+User-agent: *
+Allow: /
+
+# 后台与接口不收录
+Disallow: /admin/
+Disallow: /install/
+Disallow: /api/
+Disallow: /data/
+
+Sitemap: https://hao.mazzz.cc/sitemap.xml
