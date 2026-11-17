@@ -8,12 +8,23 @@
  */
 require __DIR__ . '/include/bootstrap.php';
 
-// 站点根地址：优先当前请求，其次后台配置的 site_url，最后兜底
-$host = rtrim(mz_url('/'), '/');
-if ($host === '' || stripos($host, 'localhost') !== false) {
-    $cfg = mz_setting('site_url');
-    if ($cfg !== '' && preg_match('~^https?://~i', $cfg)) {
-        $host = rtrim($cfg, '/');
+// 站点根地址：命令行 --host 优先，其次当前请求，再次后台 site_url
+$hostArg = '';
+foreach ($argv ?? [] as $a) {
+    if (strpos((string)$a, '--host=') === 0) {
+        $hostArg = substr($a, 7);
+    }
+}
+
+if ($hostArg !== '' && preg_match('~^https?://~i', $hostArg)) {
+    $host = rtrim($hostArg, '/');
+} else {
+    $host = rtrim(mz_url('/'), '/');
+    if ($host === '' || stripos($host, 'localhost') !== false) {
+        $cfg = mz_setting('site_url');
+        if ($cfg !== '' && preg_match('~^https?://~i', $cfg)) {
+            $host = rtrim($cfg, '/');
+        }
     }
 }
 $host .= '/';
